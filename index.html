@@ -26,7 +26,9 @@ input[type=range]{width:100%;accent-color:var(--red);margin:14px 0 0;height:28px
 /* controles secundarios */
 .ctl{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:30px}
 .ctl .v{font:400 22px Georgia,serif;margin-bottom:2px}.ctl .v small{font:13px Inter,Arial,sans-serif;color:var(--muted)}
-.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pz{display:flex;align-items:baseline;gap:8px;border-bottom:2px solid var(--ink);width:fit-content;transition:border-color .2s}.pz:focus-within{border-color:var(--red)}
+.pz input{width:3.4ch;border:0;outline:0;background:none;border-radius:0;padding:0 0 2px;font:400 22px Georgia,serif;font-variant-numeric:tabular-nums}.pz small{font-size:13px;color:var(--muted)}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 .pill{background:#fff;border:1px solid #cfcfcf;border-radius:999px;padding:6px 13px;font-size:14px;cursor:pointer;transition:all .15s}
 .pill:hover{border-color:var(--ink)}
 .pill[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -35,6 +37,9 @@ input[type=range]{width:100%;accent-color:var(--red);margin:14px 0 0;height:28px
 .res{background:var(--card);border-radius:16px;padding:24px;margin-top:34px}
 .res .big{font:400 44px/1.05 Georgia,serif;color:var(--red);font-variant-numeric:tabular-nums;margin:2px 0 4px}
 .res .big small{font-size:20px;color:var(--muted)}
+.res .big{display:flex;align-items:baseline;gap:6px}
+.res .big input{flex:1;min-width:0;border:0;outline:0;background:none;border-radius:0;font:inherit;color:inherit;padding:0 0 3px;border-bottom:2px dashed #dcc3c8;transition:border-color .2s}
+.res .big input:focus{border-bottom:2px solid var(--red)}
 .res .note{font-size:13px;color:var(--muted);margin:0}
 .bar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:22px 0 8px;background:#e6e3de}
 .bar div{width:0;transition:width .8s cubic-bezier(.2,.7,.2,1)}
@@ -74,12 +79,12 @@ details[open] summary:after{content:"−"}
 
   <div class="ctl">
     <div><label class="lbl" for="cs">Cuota inicial</label><div class="v" id="cv"></div><input id="cs" type="range" min="10" max="90" step="1" style="margin-top:6px"></div>
-    <div><span class="lbl">Plazo</span><div class="pills" id="pp"></div></div>
+    <div><label class="lbl" for="ns">Plazo</label><div class="pz"><input id="ns" type="text" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Plazo en años"><small>años</small></div><div class="pills" id="pp"></div></div>
   </div>
 
   <div class="res">
     <span class="lbl">Pagaría al mes</span>
-    <div class="big"><small>COP </small><span id="mo">0</span></div>
+    <div class="big"><small>COP </small><input id="mo" type="text" inputmode="numeric" autocomplete="off" aria-label="Cuota mensual"></div>
     <p class="note" id="mn"></p>
     <div class="bar" id="bar"></div>
     <div class="lg" id="lg"></div>
@@ -114,19 +119,22 @@ function calc(){
   return{cuota:cuota,F:F,ti:ti,ts:tv+inc*n,first:pmt+s1,total:cuota+pmt*n+tv+inc*n};
 }
 function tween(to){
-  var el=$("mo");if(reduce){el.textContent=Math.round(to).toLocaleString("es-CO");cur=to;return}
-  var from=cur,t0=null;cancelAnimationFrame(raf);
-  (function s(t){if(t0===null)t0=t;var k=Math.min(1,(t-t0)/450);cur=from+(to-from)*(1-Math.pow(1-k,3));el.textContent=Math.round(cur).toLocaleString("es-CO");if(k<1)raf=requestAnimationFrame(s)})(performance.now());
+  var el=$("mo");cancelAnimationFrame(raf);
+  if(document.activeElement===el){cur=to;return}
+  if(reduce){el.value=Math.round(to).toLocaleString("es-CO");cur=to;return}
+  var from=cur,t0=null;
+  (function s(t){if(t0===null)t0=t;var k=Math.min(1,(t-t0)/450);cur=from+(to-from)*(1-Math.pow(1-k,3));el.value=Math.round(cur).toLocaleString("es-CO");if(k<1)raf=requestAnimationFrame(s)})(performance.now());
 }
 function update(){
   var ok=S.v>=1e6;
   $("vh").textContent=ok?"Equivale a "+sh(S.v):"Escriba un valor para calcular";
   $("cv").innerHTML=S.cip+" % <small>· "+(ok?sh(S.v*S.cip/100):"—")+"</small>";
   document.querySelectorAll("#pp button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.n===S.n));
-  if(!ok){$("mo").textContent="—";$("mn").textContent="";$("bar").innerHTML="";$("lg").innerHTML="";$("st").innerHTML="";$("tot").innerHTML="";cur=0;return}
+  if(document.activeElement!==$("ns"))$("ns").value=fy(S.n);
+  if(!ok){if(document.activeElement!==$("mo"))$("mo").value="";$("mn").textContent="";$("bar").innerHTML="";$("lg").innerHTML="";$("st").innerHTML="";$("tot").innerHTML="";cur=0;return}
   var C=calc();
   tween(C.first);
-  $("mn").textContent="Primer mes, con capital, intereses y seguros. Con "+S.ea.toLocaleString("es-CO",{maximumFractionDigits:2})+" % E.A. a "+S.n/12+" años.";
+  $("mn").textContent="Primer mes, con capital, intereses y seguros ("+S.ea.toLocaleString("es-CO",{maximumFractionDigits:2})+" % E.A.). Edítela y ajustamos el plazo."+(S.msg?" "+S.msg:"");
   var cost=C.ti+C.ts,pI=cost/C.total*100;
   $("bar").innerHTML='<div style="background:#111" data-w="'+(100-pI)+'"></div><div style="background:#c8102e" data-w="'+pI+'"></div>';
   $("lg").innerHTML='<span><i style="background:#111"></i>Vivienda '+pc(100-pI)+' %</span><span><i style="background:#c8102e"></i>Intereses y seguros '+pc(pI)+' %</span>';
@@ -134,9 +142,29 @@ function update(){
   $("tot").innerHTML="Pagaría en total cerca de <b>"+sh(C.total)+"</b>.";
   requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll("#bar div").forEach(d=>d.style.width=d.dataset.w+"%")));
 }
-function go(){if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;update()})}
+function pay(n){var t=S.n;S.n=n;var f=calc().first;S.n=t;return f}
+var fy=n=>(n/12).toLocaleString("es-CO",{maximumFractionDigits:1});
+function go(k){if(!k)S.msg="";if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;update()})}
 $("pp").innerHTML=PL.map(n=>'<button class="pill" data-n="'+n+'" aria-pressed="false">'+n/12+" años</button>").join("");
 $("pp").onclick=e=>{var b=e.target.closest("button");if(!b)return;S.n=+b.dataset.n;go()};
+$("mo").oninput=function(){
+  var pos=this.selectionStart,before=this.value.slice(0,pos).replace(/\D/g,"").length,d=this.value.replace(/\D/g,"").slice(0,10);
+  this.value=d?Number(d).toLocaleString("es-CO"):"";
+  var c=0,i=0;while(i<this.value.length&&c<before){if(/\d/.test(this.value[i]))c++;i++}
+  try{this.setSelectionRange(i,i)}catch(e){}
+  var P=d?parseInt(d,10):0;
+  if(P>0&&S.v>=1e6){
+    var lo=12,hi=360,n,msg="";
+    if(P>=pay(12)){n=12;msg="Con esa cuota pagaría el crédito en 1 año, el plazo mínimo."}
+    else if(P<=pay(360)){n=360;msg="Para esta vivienda, la cuota más baja posible es "+fm(pay(360))+" (a 30 años)."}
+    else{while(hi-lo>1){var mid=(lo+hi)>>1;if(pay(mid)>P)lo=mid;else hi=mid}n=(pay(lo)-P<P-pay(hi))?lo:hi}
+    S.n=n;S.msg=msg;go(true);
+  }else go();
+};
+$("mo").onblur=function(){if(S.v>=1e6)this.value=Math.round(cur).toLocaleString("es-CO")};
+$("ns").oninput=function(){var d=this.value.replace(/\D/g,"").slice(0,2);if(d==="")return this.value="";var y=Math.min(30,parseInt(d,10));this.value=y;if(y>=1){S.n=y*12;go()}};
+$("ns").onblur=function(){this.value=fy(S.n)};
+$("ns").onfocus=function(){this.select()};
 $("vi").oninput=function(){
   var pos=this.selectionStart,before=this.value.slice(0,pos).replace(/\D/g,"").length,d=this.value.replace(/\D/g,"").slice(0,12);
   S.v=d?parseInt(d,10):0;this.value=d?Number(d).toLocaleString("es-CO"):"";
