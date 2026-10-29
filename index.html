@@ -18,7 +18,7 @@ h1{border-top:4px solid var(--red);padding-top:20px;font:700 30px/1.15 Georgia,"
 /* valor: el dato principal */
 .main .in{display:flex;align-items:baseline;gap:8px;border-bottom:3px solid var(--ink);transition:border-color .2s}
 .main .in:focus-within{border-color:var(--red)}
-.main .in span{font:400 40px Georgia,serif;color:var(--muted)}
+.main .in span{font:400 24px Georgia,serif;color:var(--muted)}
 .main input[type=text]{flex:1;min-width:0;border:0;outline:0;background:none;border-radius:0;padding:4px 0 6px;font:400 64px/1.1 Georgia,serif;font-variant-numeric:tabular-nums}
 .hint{font-size:14px;color:var(--muted);margin:8px 0 0;min-height:21px}
 input[type=range]{width:100%;accent-color:var(--red);margin:14px 0 0;height:28px}
@@ -56,18 +56,18 @@ details[open] summary:after{content:"−"}
 .adj input{width:100%;min-width:0;border:0;outline:0;background:none;font:400 20px Georgia,serif;padding:4px 0}
 .rs{background:none;border:0;color:var(--red);font-size:13px;margin-top:12px;padding:0;cursor:pointer;text-decoration:underline}
 .src{margin-top:26px;font-size:12px;color:var(--muted)}
-@media (max-width:560px){.main input[type=text]{font-size:44px}.main .in span{font-size:28px}.ctl{grid-template-columns:1fr;gap:22px}.st{grid-template-columns:1fr 1fr}.adj{grid-template-columns:1fr}.res .big{font-size:38px}}
+@media (max-width:560px){.main input[type=text]{font-size:44px}.main .in span{font-size:18px}.ctl{grid-template-columns:1fr;gap:22px}.st{grid-template-columns:1fr 1fr}.adj{grid-template-columns:1fr}.res .big{font-size:38px}}
 @media (prefers-reduced-motion:reduce){.bar div,.pill,.main .in{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Calculadora de crédito de vivienda</h1>
-  <p class="sub">Escribe o desliza el valor de la vivienda y mira cuánto pagarías cada mes.</p>
+  <p class="sub">Escriba o deslice el valor de la vivienda y vea cuánto pagaría cada mes.</p>
 
   <div class="main">
     <label class="lbl" for="vi">Valor de la vivienda</label>
-    <div class="in"><span>$</span><input id="vi" type="text" inputmode="numeric" autocomplete="off" aria-describedby="vh"></div>
+    <div class="in"><span>COP</span><input id="vi" type="text" inputmode="numeric" autocomplete="off" aria-describedby="vh"></div>
     <div class="hint" id="vh"></div>
     <input id="vs" type="range" min="50000000" max="1500000000" step="5000000" aria-label="Valor de la vivienda">
   </div>
@@ -78,8 +78,8 @@ details[open] summary:after{content:"−"}
   </div>
 
   <div class="res">
-    <span class="lbl">Pagarías al mes</span>
-    <div class="big"><small>$ </small><span id="mo">0</span></div>
+    <span class="lbl">Pagaría al mes</span>
+    <div class="big"><small>COP </small><span id="mo">0</span></div>
     <p class="note" id="mn"></p>
     <div class="bar" id="bar"></div>
     <div class="lg" id="lg"></div>
@@ -104,8 +104,8 @@ details[open] summary:after{content:"−"}
 var $=id=>document.getElementById(id);
 var DEF={ea:19.98,sv:0.04502,si:0.01925},PL=[60,120,180,240,360];
 var S={v:250000000,cip:30,n:240,ea:DEF.ea,sv:DEF.sv,si:DEF.si},cur=0,raf=0,pend=false;
-var fm=n=>"$ "+Math.round(n).toLocaleString("es-CO");
-var sh=n=>n>=1e9?"$ "+(n/1e9).toLocaleString("es-CO",{maximumFractionDigits:2})+" mil millones":"$ "+Math.round(n/1e6).toLocaleString("es-CO")+" millones";
+var fm=n=>"COP "+Math.round(n).toLocaleString("es-CO");
+var sh=n=>n>=1e9?"COP "+(n/1e9).toLocaleString("es-CO",{maximumFractionDigits:2})+" mil millones":"COP "+Math.round(n/1e6).toLocaleString("es-CO")+" millones";
 var pc=n=>n.toLocaleString("es-CO",{maximumFractionDigits:0});
 var reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
 function calc(){
@@ -120,7 +120,7 @@ function tween(to){
 }
 function update(){
   var ok=S.v>=1e6;
-  $("vh").textContent=ok?"Equivale a "+sh(S.v):"Escribe un valor para calcular";
+  $("vh").textContent=ok?"Equivale a "+sh(S.v):"Escriba un valor para calcular";
   $("cv").innerHTML=S.cip+" % <small>· "+(ok?sh(S.v*S.cip/100):"—")+"</small>";
   document.querySelectorAll("#pp button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.n===S.n));
   if(!ok){$("mo").textContent="—";$("mn").textContent="";$("bar").innerHTML="";$("lg").innerHTML="";$("st").innerHTML="";$("tot").innerHTML="";cur=0;return}
@@ -131,7 +131,7 @@ function update(){
   $("bar").innerHTML='<div style="background:#111" data-w="'+(100-pI)+'"></div><div style="background:#c8102e" data-w="'+pI+'"></div>';
   $("lg").innerHTML='<span><i style="background:#111"></i>Vivienda '+pc(100-pI)+' %</span><span><i style="background:#c8102e"></i>Intereses y seguros '+pc(pI)+' %</span>';
   $("st").innerHTML=[["Cuota inicial",C.cuota],["Préstamo",C.F],["Intereses totales",C.ti]].map(x=>"<div><span>"+x[0]+"</span><b>"+sh(x[1])+"</b></div>").join("");
-  $("tot").innerHTML="Pagarías en total cerca de <b>"+sh(C.total)+"</b>.";
+  $("tot").innerHTML="Pagaría en total cerca de <b>"+sh(C.total)+"</b>.";
   requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll("#bar div").forEach(d=>d.style.width=d.dataset.w+"%")));
 }
 function go(){if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;update()})}
